@@ -183,6 +183,7 @@ class QpskReceiver:
             if (not self.found) and (self.bcs is not None):
                 self.smpl_num_up_to_bcs -= 1
                 if self.smpl_num_up_to_bcs < self.symb_sz:
+                    print("bcs is found but det-st doesn't go up")
                     self.reset()
 
         if not self.found:
@@ -216,15 +217,15 @@ class QpskReceiver:
             if self.detector.state == 0:
                 print("preamble is found but det-st goes down")
                 self.reset()
-
-            self.phase += 2.0 * np.pi * self.bcs.fo / sample_rate
-            while self.phase > 2.0 * np.pi:
-                self.phase -= 2.0 * np.pi
-            y *= np.exp(-1j * self.phase) / self.bcs.a
-            dy *= np.exp(-1j * self.phase) / self.bcs.a
-            done, y = self.receiver.step(y, dy)
-            if done and self.decoder.step(y):
-                decoder_done = True
+            else:
+                self.phase += 2.0 * np.pi * self.bcs.fo / sample_rate
+                while self.phase > 2.0 * np.pi:
+                    self.phase -= 2.0 * np.pi
+                y *= np.exp(-1j * self.phase) / self.bcs.a
+                dy *= np.exp(-1j * self.phase) / self.bcs.a
+                done, y = self.receiver.step(y, dy)
+                if done and self.decoder.step(y):
+                    decoder_done = True
 
         if decoder_done:
             if self.decoder.rx_err == 0:
